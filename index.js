@@ -73,15 +73,15 @@ app.delete("/api/persons/:id", (req, res, next) => {
     });
 });
 
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
   const body = req.body;
 
   if (!body.name || body.name.trim() === "" || body.name === undefined) {
-    return res.status(400).send({ error: "Name is missing" });
+    return res.status(400).send({ error: "name missing" });
   }
 
   if (!body.number || body.number.trim() === "" || body.number === undefined) {
-    return res.status(400).json({ error: "Number is missing" });
+    return res.status(400).json({ error: "number missing" });
   }
 
   const person = new Person({
@@ -91,7 +91,7 @@ app.post("/api/persons", (req, res) => {
 
   person.save().then((savedPerson) => {
     res.json(savedPerson);
-  });
+  }).catch(err => next(err))
 });
 
 app.put("/api/persons/:id", async (req, res, next) => {
