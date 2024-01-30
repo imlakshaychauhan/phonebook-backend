@@ -6,7 +6,7 @@ const { Person } = require("./models/person");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
-morgan.token("header", function (req, res) {
+morgan.token("header", function (req) {
   return Object.keys(req.body).length === 0 ? "-" : JSON.stringify(req.body);
 });
 
