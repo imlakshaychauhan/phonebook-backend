@@ -50,16 +50,27 @@ app.get("/info", (req, res) => {
 });
 
 app.get("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  Person.find(id).then(person => {
-    res.json(person);
-  })
+  const id = req.params.id;
+  Person.findById({ _id: id })
+    .then((person) => {
+      if (person) res.json(person);
+      else res.status(404).end();
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(400).send({ error: "malformatted id" });
+    });
 });
 
-app.delete("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  data = data.filter((person) => person.id !== id);
-  res.status(204).end();
+app.delete("/api/persons/:id", (req, res, next) => {
+  const id = req.params.id;
+  Person.findByIdAndDelete({ _id: id })
+    .then((r) => {
+      res.status(204).end();
+    })
+    .catch((err) => {
+      next(err);
+    });
 });
 
 app.post("/api/persons", (req, res) => {
@@ -82,6 +93,39 @@ app.post("/api/persons", (req, res) => {
     res.json(savedPerson);
   });
 });
+
+app.put("/api/persons/:id", async (req, res, next) => {
+  const id = req.params.id;
+  const newData = req.body;
+
+  try {
+    const result = await Person.findByIdAndUpdate({ _id: id }, newData, {
+      new: true,
+      runValidators: true,
+      context: "query",
+    });
+    res.status(200).json(result);
+  } catch (err) {
+    throw err;
+  }
+});
+
+const unknownEndpoint = (req, res) => {
+  res.status(404).send({ error: "Unknown Endpoint" });
+};
+
+app.use(unknownEndpoint);
+
+const errorHandler = (error, req, res, next) => {
+  console.error(error.stack);
+  const statusCode = error.statusCode || 500;
+  res
+    .status(statusCode)
+    .json({ error: { message: error.message || "Internal Server Error" } });
+};
+
+app.use(errorHandler);
+
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
